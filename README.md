@@ -1,5 +1,8 @@
 <img src="Thumbnail.png" alt="Emote Dumper Thumbnail" width="100%"/>
 
+> [!IMPORTANT]
+> If you want to support this project just press **Star** and you will favorite this project.
+
 # 7TV Emote Dumper
 
 7TV Emote Dumper by **frost**<br>
@@ -7,7 +10,7 @@
 <img src="https://cdn.worldvectorlogo.com/logos/discord-6.svg" alt="Discord Logo" width="22px"/> Discord: fsxg<br>
 <img src="https://freelogopng.com/images/all_img/1656152266logo-twitch.png" alt="Discord Logo" width="22px"/> Twitch: frostxoff<br>
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Доступна версия текста ниже [на русском](README-russian.md)
 
 This program is made to download emotes from [7TV service](https://7tv.app/)<br>

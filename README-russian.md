@@ -1,5 +1,8 @@
 <img src="Thumbnail.png" alt="Emote Dumper Thumbnail" width="100%"/>
 
+> [!IMPORTANT]
+> Если вы хотите поддержать этот проект просто нажмите на **Star** и вы добавите проект в избранное.
+
 # 7TV Emote Dumper 🇷🇺
 
 7TV Emote Dumper by **frost**<br>
