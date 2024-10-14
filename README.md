@@ -18,18 +18,14 @@ https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 All animated emotes will be converted to webp<br>
 All static emotes will be converted to png
 
+## Requirements
+* [Python 3.11+](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
+* colorama
+* Pillow
+* wget
+* requests
+
+You can install python on https://python.org
+and run `install-requirements.bat` file.
+
 ### Made for [Pepeland Community](https://pepeland.net)
-
-# 🇷🇺 На русском
-Эта программа сделана для того чтобы скачивать эмоуты с [сервиса 7TV](https://7tv.app/)<br>
-Сделано специально для того чтобы делать стикерпаки в [Telegram](https://telegram.org/)
-
-Изменяйте настройки в файле `settings.py`
-
-Построено на этом сниппете кода —<br>
-https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
-
-Все анимированные эмоции будут конвертированы в webp<br>
-Все статичные эмоции будут конвертированы в png
-
-### Сделано для [Pepeland Комьюнити](https://pepeland.net)
