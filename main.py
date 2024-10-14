@@ -5,7 +5,7 @@ Based of this code snippet: https://gist.github.com/FrostX-Official/a268e881f4ec
 All animated emotes will be converted to webp
 All static emotes will be converted to png
 
-Settings at line 25.
+Edit settings in settings.py file.
 """
 
 from colorama import Fore
@@ -22,13 +22,13 @@ import os
 
 # settings
 
-emoteset_id = "61c802080bf6300371940381" # example emote set by PWGood: 61c802080bf6300371940381
-# ^ smaller example by AlexanderLer: 612a670021ca87d781a04e49
-folder = "emotes" # folder to dump emotes and clear it if "remove" setting is true
-remove = True # remove all emotes from folder before starting
-rescale_to = 512 # for telegram stickers you need either width or height to be 512 so this value is recommended
+import settings
 
-webp_quality = 40 # / 100
+emoteset_id = settings.emoteset_id
+folder = settings.folder 
+remove = settings.remove
+rescale_to = settings.rescale_to
+webp_quality = settings.webp_quality
 
 # remove all emotes from folder
 

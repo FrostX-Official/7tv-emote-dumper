@@ -10,6 +10,8 @@
 This program is made to download emotes from [7TV service](https://7tv.app/)<br>
 Made specifically to make stickerpacks on [Telegram](https://telegram.org/)
 
+Edit settings in `settings.py` file
+
 Based on this code snippet —<br>
 https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 
@@ -21,6 +23,8 @@ All static emotes will be converted to png
 # 🇷🇺 На русском
 Эта программа сделана для того чтобы скачивать эмоуты с [сервиса 7TV](https://7tv.app/)<br>
 Сделано специально для того чтобы делать стикерпаки в [Telegram](https://telegram.org/)
+
+Изменяйте настройки в файле `settings.py`
 
 Построено на этом сниппете кода —<br>
 https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
