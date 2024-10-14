@@ -5,10 +5,11 @@
 
 # 7TV Emote Dumper
 
-7TV Emote Dumper by **frost**<br>
+7TV Emote Dumper by **frost ♡**<br>
 <img src="https://img.icons8.com/m_sharp/200/FFFFFF/github.png" alt="GitHub Logo" width="22px"/> GitHub: frostx-official<br>
 <img src="https://cdn.worldvectorlogo.com/logos/discord-6.svg" alt="Discord Logo" width="22px"/> Discord: fsxg<br>
-<img src="https://freelogopng.com/images/all_img/1656152266logo-twitch.png" alt="Discord Logo" width="22px"/> Twitch: frostxoff<br>
+<img src="https://freelogopng.com/images/all_img/1656152266logo-twitch.png" alt="Twitch Logo" width="22px"/> Twitch: frostxoff<br>
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/2048px-Telegram_logo.svg.png" alt="Telegram Logo" width="22px"/> Telegram: @frostxoff<br>
 
 > [!IMPORTANT]
 > Доступна версия текста ниже [на русском](README-russian.md)

@@ -101,18 +101,17 @@ for emote in allEmotes:
                 continue
             scaled_up = (int(width*buh), int(height*buh))
 
-            frames = []
+            framestotal = 0
             for frame in ImageSequence.Iterator(img):
-                frames.append(frame)
+                framestotal += 1
 
             new_frames = []
 
             framenum = 0
-            framestotal = len(frames)
 
-            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d frames resized | %(percent).1f%%")
+            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
 
-            for frame in frames:
+            for frame in ImageSequence.Iterator(img):
                 framenum += 1
                 thumbnail: Image.Image = frame.copy()
                 thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST)
@@ -132,7 +131,7 @@ for emote in allEmotes:
             highest = max(width,height)
             buh = rescale_to/highest
             print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*buh)}x{int(height*buh)} ...")
-            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=1, suffix="%(index)d frames resized | %(percent).1f%%")
+            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=1, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
             scaled_up = (int(width*buh), int(height*buh))
             img.resize(scaled_up, Image.Resampling.NEAREST).save(f"{folder}/{emote['name']}.{newformat}")
             bar.next()
