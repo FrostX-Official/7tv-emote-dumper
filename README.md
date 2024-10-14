@@ -1,5 +1,8 @@
 <img src="Thumbnail.png" alt="Emote Dumper Thumbnail" width="100%"/>
 
+> [!IMPORTANT]  
+> Доступна [версия на русском](README-russian.md)
+
 # 7TV Emote Dumper
 
 7TV Emote Dumper by **frost**<br>
