@@ -56,6 +56,7 @@ def getEmotesFromEmoteSetId(id):
 allEmotes = getEmotesFromEmoteSetId(emoteset_id)
 
 downloadTookSpace = 0
+downloadTookTime = 0
 
 print(Fore.MAGENTA+f"=== ALL EMOTES ({len(allEmotes)})")
 i = 0
@@ -89,8 +90,11 @@ for emote in allEmotes:
                 emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
                 downloadTookSpace += emoteSizeResult
                 emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
+
+                emoteTimeResult = time.time()-emoteExecutionTime
+                downloadTookTime += emoteTimeResult
                 
-                print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512) Saving \"{emote['name']}\" took {round(time.time()-emoteExecutionTime, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+                print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512) Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
                 continue
             scaled_up = (int(width*buh), int(height*buh))
 
@@ -123,11 +127,13 @@ for emote in allEmotes:
             raise e
         
     emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
+    emoteTimeResult = time.time()-emoteExecutionTime
     emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
 
     downloadTookSpace += emoteSizeResult
+    downloadTookTime += emoteTimeResult
             
-    print(Fore.GREEN+f"Saving \"{emote['name']}\" took {round(time.time()-emoteExecutionTime, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+    print(Fore.GREEN+f"Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
 
 print(Fore.MAGENTA+"===")
-print(Fore.GREEN+f"Emotes downloading took {downloadTookSpace/1000000}MB")
+print(Fore.GREEN+f"Emotes downloading took {round(downloadTookTime, 2)}s and {downloadTookSpace/1000000}MB")
