@@ -21,7 +21,7 @@ https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 Все анимированные эмоции будут конвертированы в webp<br>
 Все статичные эмоции будут конвертированы в png
 
-## Requirements
+## Требования
 * [Python 3.11+](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
 * colorama
 * Pillow

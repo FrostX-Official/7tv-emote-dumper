@@ -1,2 +1,2 @@
-emotes/
-.venv/
+emotes/*
+!/emotes/test-emote.webp
