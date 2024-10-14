@@ -27,6 +27,7 @@ https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 * Pillow
 * wget
 * requests
+* progress
 
 Вы можете установить Python на https://python.org
 и запустить файл `install-requirements.bat`.

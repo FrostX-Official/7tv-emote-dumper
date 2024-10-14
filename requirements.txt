@@ -2,3 +2,4 @@ colorama
 Pillow
 wget
 requests
+progress

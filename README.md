@@ -30,6 +30,7 @@ All static emotes will be converted to png
 * Pillow
 * wget
 * requests
+* progress
 
 You can install python on https://python.org
 and run `install-requirements.bat` file.

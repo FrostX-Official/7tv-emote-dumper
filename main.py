@@ -20,6 +20,8 @@ import time
 import wget
 import os
 
+from progress.bar import ShadyBar
+
 # settings
 
 import settings
@@ -72,20 +74,21 @@ for emote in allEmotes:
         wget.download(f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}",f"{folder}/{emote['name']}.{newformat}")
     except Exception as e:
         if isinstance(e, OSError):
-            print(Fore.RED+f"\nFailed to download {emote['name']}: {e} | SKIPPING...")
+            print(Fore.RED+f"\nFailed to download {emote['name']}: {e} | This might be because emote contains invalid characters | SKIPPING...\n\n")
             continue
 
         print(Fore.RED+f"\nFailed to download {emote['name']}: {e}")
         raise e
     
     try:
-        print(Fore.YELLOW+f"\nResizing...")
         if isAnimated:
             img: Image.Image = Image.open(f"{folder}/{emote['name']}.webp")
             img.info.pop('background', None)
             width, height = img.size
             highest = max(width,height)
             buh = rescale_to/highest
+            
+            print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*buh)}x{int(height*buh)} ...")
             if buh == 1:
                 emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
                 downloadTookSpace += emoteSizeResult
@@ -98,19 +101,28 @@ for emote in allEmotes:
                 continue
             scaled_up = (int(width*buh), int(height*buh))
 
-            frames = ImageSequence.Iterator(img)
+            frames = []
+            for frame in ImageSequence.Iterator(img):
+                frames.append(frame)
 
             new_frames = []
 
+            framenum = 0
+            framestotal = len(frames)
+
+            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d frames resized | %(percent).1f%%")
+
             for frame in frames:
+                framenum += 1
                 thumbnail: Image.Image = frame.copy()
                 thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST)
                 thumbnail.info.pop('background', None)
                 new_frames.append(thumbnail)
+                bar.next()
+            bar.finish()
 
-            # Save output
-            om = new_frames[0] # Handle first frame separately
-            om.info = img.info # Copy sequence info
+            om = new_frames[0]
+            om.info = img.info
             om.save(f"{folder}/{emote['name']}.webp", "webp", save_all=True, append_images=new_frames, loop=0, duration=om.info["duration"], quality=webp_quality)
             img.close()
             #print(f"\n{emote['name']}: resized gif and saved as webp\n")
@@ -119,8 +131,13 @@ for emote in allEmotes:
             width, height = img.size
             highest = max(width,height)
             buh = rescale_to/highest
+            print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*buh)}x{int(height*buh)} ...")
+            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=1, suffix="%(index)d frames resized | %(percent).1f%%")
             scaled_up = (int(width*buh), int(height*buh))
             img.resize(scaled_up, Image.Resampling.NEAREST).save(f"{folder}/{emote['name']}.{newformat}")
+            bar.next()
+            bar.finish()
+            img.close()
     except Exception as e:
         if str(e) != "illegal image mode":
             print(Fore.RED+f"\nFailed to resize and save {emote['name']}: {e}")
