@@ -1,0 +1,1 @@
+# 7tv-emote-dumper
