@@ -28,6 +28,7 @@ All static emotes will be converted to png ("static" stickers)
 
 ## Requirements
 * [Python 3.11+](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
+
 All modules that need to be installed can be located in `requirements.txt` file<br>
 You can install python on https://python.org
 and run `install-requirements.bat` file to automatically install all modules.

@@ -25,6 +25,7 @@ https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 
 ## Требования
 * [Python 3.11+](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
+
 Все модули которые должны быть установлены можно найти в файле `requirements.txt`<br>
 Вы можете установить Python на https://python.org
 и запустить файл `install-requirements.bat` для того чтобы автоматически установить все модули.

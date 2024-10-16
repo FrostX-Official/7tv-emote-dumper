@@ -35,6 +35,7 @@ rescale_to = settings.rescale_to
 output_quality = settings.output_quality
 crf_quality = settings.crf_quality
 skip_long_emotes = settings.skip_long_emotes
+ffmpeg_preset = settings.ffmpeg_preset
 
 toaster = None
 
@@ -98,12 +99,12 @@ def convertAnimatedEmote(emote):
                 return "deleted"
 
         print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) and probably will not pass Telegram video sticker checks.")
-    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0"])#, ffmpeg_params=["-ss","00:00:00","-t","00:00:03"]
+    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0","-vf", "colorkey=white"], preset=ffmpeg_preset)
     clip.close()
 
 def processAnimatedEmote(emote):
     img: Image.Image = Image.open(f"{folder}/{emote['name']}.gif")
-    img.info.pop('background', None)
+    img.info.pop("background", None)
     width, height = img.size
     highest = max(width,height)
     aspect_ratio_thingy = rescale_to/highest
@@ -135,8 +136,7 @@ def processAnimatedEmote(emote):
     for frame in ImageSequence.Iterator(img):
         framenum += 1
         thumbnail: Image.Image = frame.copy()
-        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST)
-        thumbnail.info.pop('background', None)
+        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST, reducing_gap=3.0).convert(mode="RGBA")
         new_frames.append(thumbnail)
         bar.next()
     bar.finish()
@@ -144,8 +144,15 @@ def processAnimatedEmote(emote):
     om: Image.Image = new_frames[0]
     om.info = img.info
     img.close()
-    om.info.pop('background', None)
-    om.save(f"{folder}/{emote['name']}.gif", "gif", save_all=True, append_images=new_frames, loop=0, duration=om.info["duration"], quality=output_quality)
+    om.save(f"{folder}/{emote['name']}.gif", format="GIF",
+            optimize=False,
+            save_all=True,
+            append_images=new_frames[1:],
+            loop=0,
+            duration=om.info["duration"],
+            quality=output_quality,
+            disposal=2
+        )
     om.close()
 
     return convertAnimatedEmote(emote)
