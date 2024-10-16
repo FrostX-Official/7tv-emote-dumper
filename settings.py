@@ -8,7 +8,7 @@ folder = "emotes" # folder to dump emotes and clear it if "remove" setting is tr
 remove = True # remove all emotes from folder before starting
 rescale_to = 512 # for telegram stickers you need either width or height to be 512 so this value is recommended, or 100 for stickerpack icon
 
-skip_long_emotes = "anything else"
+skip_long_emotes = "anything else" # skip emotes if they're longer than 3 seconds
 #^ y for auto skip and deletion
 #| c for choose with input (Want to skip {emote}? [Y/N])
 #| ct for c with win10toast notifications

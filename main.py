@@ -36,8 +36,11 @@ output_quality = settings.output_quality
 crf_quality = settings.crf_quality
 skip_long_emotes = settings.skip_long_emotes
 
+toaster = None
+
 if skip_long_emotes == "ct":
     from win10toast import ToastNotifier
+    toaster = ToastNotifier()
 
 # remove all emotes from folder
 
@@ -51,8 +54,6 @@ if remove:
                 shutil.rmtree(file_path)
         except Exception as e:
             print(Fore.RED+"Failed to delete %s. Reason: %s" % (file_path, e))
-
-toaster = ToastNotifier()
 
 def getEmotesFromEmoteSetId(id):
     emotes = []
