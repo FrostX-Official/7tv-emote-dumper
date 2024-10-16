@@ -50,27 +50,30 @@ if remove:
 
 def getEmotesFromEmoteSetId(id):
     emotes = []
-    fetchBody = {"operationName":"GetEmoteSet","variables":{"id":id},"query":"query GetEmoteSet($id: ObjectID!) {\n  emoteSet(id: $id) {\n    id\n    name\n    emotes {\n      id\n      name\n      data {\n      animated\n      }\n}\n}\n}"}
+    fetchBody = {"operationName":"GetEmoteSet","variables":{"id":id},"query":"query GetEmoteSet($id: ObjectID!) {\n  emoteSet(id: $id) {\n    id\n    name\n    owner {\n    display_name\n    }\n    emotes {\n      id\n      name\n      data {\n      animated\n      }\n}\n}\n}"}
 
     emotesetJson = requests.post("https://7tv.io/v3/gql",json=fetchBody).json()
+    emotesetname = emotesetJson["data"]["emoteSet"]["name"]
+    emotesetauthor = emotesetJson["data"]["emoteSet"]["owner"]["display_name"]
     for emote in emotesetJson["data"]["emoteSet"]["emotes"]:
         emotes.append(emote)
 
-    return emotes
+    return emotes, emotesetname, emotesetauthor
 
-allEmotes = getEmotesFromEmoteSetId(emoteset_id)
+allEmotes, emotesetname, emotesetauthor = getEmotesFromEmoteSetId(emoteset_id)
 
 downloadTookSpace = 0
 downloadTookTime = 0
 
-print(Fore.MAGENTA+f"=== ALL EMOTES ({len(allEmotes)})")
+print(Fore.MAGENTA+f"=== ALL EMOTES | {emotesetname} by {emotesetauthor} ({len(allEmotes)})")
 i = 0
 for emote in allEmotes:
     emoteExecutionTime = time.time()
     i+=1
     isAnimated = emote["data"]["animated"]
     newformat = isAnimated and "gif" or "png"
-    print(Fore.MAGENTA+emote["name"], f"({emote['id']}),", isAnimated and Fore.MAGENTA+"Animated" or Fore.YELLOW+"Static", f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
+    isAnimatedText = isAnimated and Fore.MAGENTA+"Animated" or Fore.YELLOW+"Static"
+    print(Fore.MAGENTA+emote["name"], f"({emote['id']}),", isAnimatedText, f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
 
     try:
         print(Fore.YELLOW+f"Downloading...")# [ https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat} to {folder}/{emote['name']}.{newformat} ]
@@ -79,11 +82,8 @@ for emote in allEmotes:
         if "WinError 10060" in str(e):
             print(Fore.RED+f"Failed to download {emote['name']}: {e} | You might have not stable internet connection, or 7TV CDN is down, or you have 7TV blocked by your provider | SKIPPING...\n\n")
             continue
-        if "SSL: UNEXPECTED_EOF_WHILE_READING" in str(e):
-            print(Fore.RED+f"Failed to download {emote['name']}: {e} | Unknown eof error\n\n")
-            raise e
-        if isinstance(e, OSError):
-            print(Fore.RED+f"Failed to download {emote['name']}: {e} | This might be because emote contains invalid characters | SKIPPING...\n\n")
+        if "[Errno 22] Invalid argument:" in str(e):
+            print(Fore.RED+f"Failed to download {emote['name']}: {e} | This might be because emote contains invalid characters like \"?\" | SKIPPING...\n\n")
             continue
 
         print(Fore.RED+f"Failed to download {emote['name']}: {e}")
@@ -139,8 +139,10 @@ for emote in allEmotes:
             print(Fore.YELLOW+"Converting to WEBM...")
 
             clip = VideoFileClip(f"{folder}/{emote['name']}.gif")
-            clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-ss","00:00:00","-t","00:00:03","-crf",str(crf_quality),"-b:v","0"])
-            os.remove(f"{folder}/{emote['name']}.gif")
+            if clip.duration > 3:
+                print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) and probably will not pass Telegram video sticker checks.")
+            clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0"])#, ffmpeg_params=["-ss","00:00:00","-t","00:00:03"]
+            clip.close()
         else:
             img = Image.open(f"{folder}/{emote['name']}.{newformat}")
             width, height = img.size
@@ -169,6 +171,8 @@ for emote in allEmotes:
     downloadTookTime += emoteTimeResult
             
     print(Fore.GREEN+f"Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+    if isAnimated:
+        os.remove(f"{folder}/{emote['name']}.gif")
 
 print(Fore.MAGENTA+"===")
 print(Fore.GREEN+f"Emotes downloading took {round(downloadTookTime, 2)}s and {downloadTookSpace/1000000}MB")
