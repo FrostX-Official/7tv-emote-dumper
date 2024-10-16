@@ -73,19 +73,20 @@ for emote in allEmotes:
     print(Fore.MAGENTA+emote["name"], f"({emote['id']}),", isAnimated and Fore.MAGENTA+"Animated" or Fore.YELLOW+"Static", f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
 
     try:
-        print(Fore.YELLOW+f"Downloading...")
+        print(Fore.YELLOW+f"Downloading...")# [ https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat} to {folder}/{emote['name']}.{newformat} ]
         wget.download(f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}",f"{folder}/{emote['name']}.{newformat}")
     except Exception as e:
-        # WinError 10060
         if "WinError 10060" in str(e):
-            print(Fore.RED+f"\nFailed to download {emote['name']}: {e} | You might have not stable internet connection, or 7TV CDN is down, or you have 7TV blocked by your provider | SKIPPING...\n\n")
+            print(Fore.RED+f"Failed to download {emote['name']}: {e} | You might have not stable internet connection, or 7TV CDN is down, or you have 7TV blocked by your provider | SKIPPING...\n\n")
             continue
-
+        if "SSL: UNEXPECTED_EOF_WHILE_READING" in str(e):
+            print(Fore.RED+f"Failed to download {emote['name']}: {e} | Unknown eof error\n\n")
+            raise e
         if isinstance(e, OSError):
-            print(Fore.RED+f"\nFailed to download {emote['name']}: {e} | This might be because emote contains invalid characters | SKIPPING...\n\n")
+            print(Fore.RED+f"Failed to download {emote['name']}: {e} | This might be because emote contains invalid characters | SKIPPING...\n\n")
             continue
 
-        print(Fore.RED+f"\nFailed to download {emote['name']}: {e}")
+        print(Fore.RED+f"Failed to download {emote['name']}: {e}")
         raise e
     
     try:
@@ -138,7 +139,7 @@ for emote in allEmotes:
             print(Fore.YELLOW+"Converting to WEBM...")
 
             clip = VideoFileClip(f"{folder}/{emote['name']}.gif")
-            clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-ss","00:00:00","-t","00:00:03","-crf",str(crf_quality),"-b:v","0","-minrate", "10K", "-maxrate", "10K"])
+            clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-ss","00:00:00","-t","00:00:03","-crf",str(crf_quality),"-b:v","0"])
             os.remove(f"{folder}/{emote['name']}.gif")
         else:
             img = Image.open(f"{folder}/{emote['name']}.{newformat}")

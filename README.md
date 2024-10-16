@@ -1,3 +1,6 @@
+> [!NOTE]
+> Доступна версия всего ниже [на русском](README-russian.md)
+
 <img src="Thumbnail.png" alt="Emote Dumper Thumbnail" width="100%"/>
 
 > [!IMPORTANT]
@@ -10,9 +13,6 @@
 <img src="https://cdn.worldvectorlogo.com/logos/discord-6.svg" alt="Discord Logo" width="22px"/> Discord: fsxg<br>
 <img src="https://freelogopng.com/images/all_img/1656152266logo-twitch.png" alt="Twitch Logo" width="22px"/> Twitch: frostxoff<br>
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/2048px-Telegram_logo.svg.png" alt="Telegram Logo" width="22px"/> Telegram: @frostxoff<br>
-
-> [!IMPORTANT]
-> Доступна версия текста ниже [на русском](README-russian.md)
 
 This program is made to download emotes from [7TV service](https://7tv.app/)<br>
 Made specifically to make stickerpacks on [Telegram](https://telegram.org/)
