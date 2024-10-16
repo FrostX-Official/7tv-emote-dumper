@@ -7,6 +7,7 @@
 > If you want to support this project just press **Star** and you will favorite this project.
 
 # 7TV Emote Dumper
+### Made for [Pepeland Community](https://pepeland.net)
 
 7TV Emote Dumper by **frost ♡**<br>
 <img src="https://img.icons8.com/m_sharp/200/FFFFFF/github.png" alt="GitHub Logo" width="22px"/> GitHub: frostx-official<br>
@@ -30,5 +31,7 @@ All static emotes will be converted to png ("static" stickers)
 All modules that need to be installed can be located in `requirements.txt` file<br>
 You can install python on https://python.org
 and run `install-requirements.bat` file to automatically install all modules.
-
-### Made for [Pepeland Community](https://pepeland.net)
+> [!NOTE]
+> Module `win10toast` is required only if you want to use setting `skip_long_emotes` with value `ct`
+## Long dumping times?
+You can experience long emote-sets dumping times if dumper is on slow drives, the slowest part of dumping is converting animated emotes to **webM**. To fix that problem simply move your dumper install path to faster drive.

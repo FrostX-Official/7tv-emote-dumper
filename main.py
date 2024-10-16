@@ -34,6 +34,10 @@ remove = settings.remove
 rescale_to = settings.rescale_to
 output_quality = settings.output_quality
 crf_quality = settings.crf_quality
+skip_long_emotes = settings.skip_long_emotes
+
+if skip_long_emotes == "ct":
+    from win10toast import ToastNotifier
 
 # remove all emotes from folder
 
@@ -48,6 +52,8 @@ if remove:
         except Exception as e:
             print(Fore.RED+"Failed to delete %s. Reason: %s" % (file_path, e))
 
+toaster = ToastNotifier()
+
 def getEmotesFromEmoteSetId(id):
     emotes = []
     fetchBody = {"operationName":"GetEmoteSet","variables":{"id":id},"query":"query GetEmoteSet($id: ObjectID!) {\n  emoteSet(id: $id) {\n    id\n    name\n    owner {\n    display_name\n    }\n    emotes {\n      id\n      name\n      data {\n      animated\n      }\n}\n}\n}"}
@@ -59,6 +65,89 @@ def getEmotesFromEmoteSetId(id):
         emotes.append(emote)
 
     return emotes, emotesetname, emotesetauthor
+
+def convertAnimatedEmote(emote):
+    print(Fore.YELLOW+"Converting to WEBM...")
+
+    clip = VideoFileClip(f"{folder}/{emote['name']}.gif")
+    if clip.duration > 3:
+        if skip_long_emotes.lower() == "y":
+            print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) deleting and skipping...")
+            clip.close()
+            return "deleted"
+        
+        elif skip_long_emotes.lower() == "c":
+            inp = input(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) want to skip and delete \"{emote['name']}\"? [Y/N] >")
+            if inp.lower() == "y" or inp.lower() == "yes":
+                print(Fore.RED+f"Skipped and deleted \"{emote['name']}\".")
+                clip.close()
+                return "deleted"
+            
+        elif skip_long_emotes.lower() == "ct":
+            toaster.show_toast(f"Emote \"{emote['name']}\"",
+                    f"\"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s)",
+                    duration=3,
+                    threaded=True
+                )
+            
+            inp = input(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) want to skip and delete \"{emote['name']}\"? [Y/N] >")
+            if inp.lower() == "y" or inp.lower() == "yes":
+                print(Fore.RED+f"Skipped and deleted \"{emote['name']}\".")
+                clip.close()
+                return "deleted"
+
+        print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) and probably will not pass Telegram video sticker checks.")
+    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0"])#, ffmpeg_params=["-ss","00:00:00","-t","00:00:03"]
+    clip.close()
+
+def processAnimatedEmote(emote):
+    img: Image.Image = Image.open(f"{folder}/{emote['name']}.gif")
+    img.info.pop('background', None)
+    width, height = img.size
+    highest = max(width,height)
+    aspect_ratio_thingy = rescale_to/highest
+    
+    print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
+
+    if aspect_ratio_thingy == 1:
+        emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
+        downloadTookSpace += emoteSizeResult
+        emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
+
+        emoteTimeResult = time.time()-emoteExecutionTime
+        downloadTookTime += emoteTimeResult
+        
+        print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512)\nSaving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+        
+        return convertAnimatedEmote(emote)
+
+    framestotal = 0
+    for frame in ImageSequence.Iterator(img):
+        framestotal += 1
+
+    new_frames = []
+    framenum = 0
+
+    bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
+    scaled_up = (int(width*aspect_ratio_thingy), int(height*aspect_ratio_thingy))
+
+    for frame in ImageSequence.Iterator(img):
+        framenum += 1
+        thumbnail: Image.Image = frame.copy()
+        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST)
+        thumbnail.info.pop('background', None)
+        new_frames.append(thumbnail)
+        bar.next()
+    bar.finish()
+
+    om: Image.Image = new_frames[0]
+    om.info = img.info
+    img.close()
+    om.info.pop('background', None)
+    om.save(f"{folder}/{emote['name']}.gif", "gif", save_all=True, append_images=new_frames, loop=0, duration=om.info["duration"], quality=output_quality)
+    om.close()
+
+    return convertAnimatedEmote(emote)
 
 allEmotes, emotesetname, emotesetauthor = getEmotesFromEmoteSetId(emoteset_id)
 
@@ -86,71 +175,27 @@ for emote in allEmotes:
             print(Fore.RED+f"Failed to download {emote['name']}: {e} | This might be because emote contains invalid characters like \"?\" | SKIPPING...\n\n")
             continue
 
-        print(Fore.RED+f"Failed to download {emote['name']}: {e}")
-        raise e
+        print(Fore.RED+f"\nFailed to download {emote['name']}: {e}")
+        inp = input(Fore.MAGENTA+f"Skip this emote downloading? [Y - yes/N - raise error and crash program] >")
+        if inp.lower() == "y" or inp.lower() == "yes":
+            continue
+        else:
+            raise e
     
     try:
         if isAnimated:
-            img: Image.Image = Image.open(f"{folder}/{emote['name']}.gif")
-            img.info.pop('background', None)
-            width, height = img.size
-            highest = max(width,height)
-            buh = rescale_to/highest
-            
-            print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*buh)}x{int(height*buh)} ...")
-            if buh == 1:
-                emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
-                downloadTookSpace += emoteSizeResult
-                emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
-
-                emoteTimeResult = time.time()-emoteExecutionTime
-                downloadTookTime += emoteTimeResult
-                
-                print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512) Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+            result = processAnimatedEmote(emote)
+            if result == "deleted":
+                os.remove(f"{folder}/{emote['name']}.gif")
                 continue
-            scaled_up = (int(width*buh), int(height*buh))
-
-            framestotal = 0
-            for frame in ImageSequence.Iterator(img):
-                framestotal += 1
-
-            new_frames = []
-
-            framenum = 0
-
-            bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
-
-            for frame in ImageSequence.Iterator(img):
-                framenum += 1
-                thumbnail: Image.Image = frame.copy()
-                thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST)
-                thumbnail.info.pop('background', None)
-                new_frames.append(thumbnail)
-                bar.next()
-            bar.finish()
-
-            om: Image.Image = new_frames[0]
-            om.info = img.info
-            img.close()
-            om.info.pop('background', None)
-            om.save(f"{folder}/{emote['name']}.gif", "gif", save_all=True, append_images=new_frames, loop=0, duration=om.info["duration"], quality=output_quality)
-            om.close()
-
-            print(Fore.YELLOW+"Converting to WEBM...")
-
-            clip = VideoFileClip(f"{folder}/{emote['name']}.gif")
-            if clip.duration > 3:
-                print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) and probably will not pass Telegram video sticker checks.")
-            clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0"])#, ffmpeg_params=["-ss","00:00:00","-t","00:00:03"]
-            clip.close()
         else:
             img = Image.open(f"{folder}/{emote['name']}.{newformat}")
             width, height = img.size
             highest = max(width,height)
-            buh = rescale_to/highest
-            print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*buh)}x{int(height*buh)} ...")
+            aspect_ratio_thingy = rescale_to/highest
+            print(Fore.YELLOW+f"\nResizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
             bar = ShadyBar(Fore.YELLOW+"Resizing...", max=1, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
-            scaled_up = (int(width*buh), int(height*buh))
+            scaled_up = (int(width*aspect_ratio_thingy), int(height*aspect_ratio_thingy))
             img.resize(scaled_up, Image.Resampling.NEAREST).save(f"{folder}/{emote['name']}.{newformat}")
             bar.next()
             bar.finish()
@@ -164,6 +209,8 @@ for emote in allEmotes:
         newformat = "webm" # after convertation of animated emote file format changes
         
     emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
+    if emoteSizeResult > 512000:
+        print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" size is more than 512 kilobytes and probably will not pass Telegram video sticker checks.")
     emoteTimeResult = time.time()-emoteExecutionTime
     emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
 

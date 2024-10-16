@@ -8,5 +8,11 @@ folder = "emotes" # folder to dump emotes and clear it if "remove" setting is tr
 remove = True # remove all emotes from folder before starting
 rescale_to = 512 # for telegram stickers you need either width or height to be 512 so this value is recommended, or 100 for stickerpack icon
 
-output_quality = 40 # / 100
-crf_quality = 35 # / 63 | lower values mean better quality: https://trac.ffmpeg.org/wiki/Encode/VP9#constantq
+skip_long_emotes = "anything else"
+#^ y for auto skip and deletion
+#| c for choose with input (Want to skip {emote}? [Y/N])
+#| ct for c with win10toast notifications
+#| anything else for force convertation
+
+output_quality = 30 # / 100
+crf_quality = 40 # / 63 | lower values mean better quality: https://trac.ffmpeg.org/wiki/Encode/VP9#constantq

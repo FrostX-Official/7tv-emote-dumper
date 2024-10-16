@@ -4,3 +4,4 @@ wget
 requests
 progress
 moviepy
+win10toast
