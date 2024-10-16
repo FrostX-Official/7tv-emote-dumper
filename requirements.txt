@@ -3,3 +3,4 @@ Pillow
 wget
 requests
 progress
+moviepy

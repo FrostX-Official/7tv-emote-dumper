@@ -19,18 +19,13 @@
 Построено на этом сниппете кода —<br>
 https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 
-Все анимированные эмоции будут конвертированы в webp<br>
-Все статичные эмоции будут конвертированы в png
+Все анимированные эмоции будут конвертированы в webm ("video" стикеры)<br>
+Все статичные эмоции будут конвертированы в png ("static" стикеры)
 
 ## Требования
 * [Python 3.11+](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
-* colorama
-* Pillow
-* wget
-* requests
-* progress
-
+* Все модули которые должны быть установлены можно найти в файле `requirements.txt`
 Вы можете установить Python на https://python.org
-и запустить файл `install-requirements.bat`.
+и запустить файл `install-requirements.bat` для того чтобы автоматически установить все модули.
 
 ### Сделано для [Pepeland Комьюнити](https://pepeland.net)

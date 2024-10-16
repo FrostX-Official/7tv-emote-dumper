@@ -2,8 +2,8 @@
 7TV Emote Dumper by frost | github: frostx-official | discord: fsxg | twitch: frostxoff
 Based of this code snippet: https://gist.github.com/FrostX-Official/a268e881f4ecf6cd1f2af5d4031e993d
 
-All animated emotes will be converted to webp
-All static emotes will be converted to png
+All animated emotes will be converted to webm ("video" stickers)
+All static emotes will be converted to png ("static" stickers)
 
 Edit settings in settings.py file.
 """
@@ -20,6 +20,8 @@ import time
 import wget
 import os
 
+from moviepy.editor import VideoFileClip
+
 from progress.bar import ShadyBar
 
 # settings
@@ -27,10 +29,11 @@ from progress.bar import ShadyBar
 import settings
 
 emoteset_id = settings.emoteset_id
-folder = settings.folder 
+folder = settings.folder
 remove = settings.remove
 rescale_to = settings.rescale_to
-webp_quality = settings.webp_quality
+output_quality = settings.output_quality
+crf_quality = settings.crf_quality
 
 # remove all emotes from folder
 
@@ -66,13 +69,18 @@ for emote in allEmotes:
     emoteExecutionTime = time.time()
     i+=1
     isAnimated = emote["data"]["animated"]
-    newformat = isAnimated and "webp" or "png"
+    newformat = isAnimated and "gif" or "png"
     print(Fore.MAGENTA+emote["name"], f"({emote['id']}),", isAnimated and Fore.MAGENTA+"Animated" or Fore.YELLOW+"Static", f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
 
     try:
         print(Fore.YELLOW+f"Downloading...")
         wget.download(f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}",f"{folder}/{emote['name']}.{newformat}")
     except Exception as e:
+        # WinError 10060
+        if "WinError 10060" in str(e):
+            print(Fore.RED+f"\nFailed to download {emote['name']}: {e} | You might have not stable internet connection, or 7TV CDN is down, or you have 7TV blocked by your provider | SKIPPING...\n\n")
+            continue
+
         if isinstance(e, OSError):
             print(Fore.RED+f"\nFailed to download {emote['name']}: {e} | This might be because emote contains invalid characters | SKIPPING...\n\n")
             continue
@@ -82,7 +90,7 @@ for emote in allEmotes:
     
     try:
         if isAnimated:
-            img: Image.Image = Image.open(f"{folder}/{emote['name']}.webp")
+            img: Image.Image = Image.open(f"{folder}/{emote['name']}.gif")
             img.info.pop('background', None)
             width, height = img.size
             highest = max(width,height)
@@ -120,11 +128,18 @@ for emote in allEmotes:
                 bar.next()
             bar.finish()
 
-            om = new_frames[0]
+            om: Image.Image = new_frames[0]
             om.info = img.info
-            om.save(f"{folder}/{emote['name']}.webp", "webp", save_all=True, append_images=new_frames, loop=0, duration=om.info["duration"], quality=webp_quality)
             img.close()
-            #print(f"\n{emote['name']}: resized gif and saved as webp\n")
+            om.info.pop('background', None)
+            om.save(f"{folder}/{emote['name']}.gif", "gif", save_all=True, append_images=new_frames, loop=0, duration=om.info["duration"], quality=output_quality)
+            om.close()
+
+            print(Fore.YELLOW+"Converting to WEBM...")
+
+            clip = VideoFileClip(f"{folder}/{emote['name']}.gif")
+            clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-ss","00:00:00","-t","00:00:03","-crf",str(crf_quality),"-b:v","0","-minrate", "10K", "-maxrate", "10K"])
+            os.remove(f"{folder}/{emote['name']}.gif")
         else:
             img = Image.open(f"{folder}/{emote['name']}.{newformat}")
             width, height = img.size
@@ -141,6 +156,9 @@ for emote in allEmotes:
         if str(e) != "illegal image mode":
             print(Fore.RED+f"\nFailed to resize and save {emote['name']}: {e}")
             raise e
+        
+    if isAnimated:
+        newformat = "webm" # after convertation of animated emote file format changes
         
     emoteSizeResult = os.path.getsize(f"{folder}/{emote['name']}.{newformat}")
     emoteTimeResult = time.time()-emoteExecutionTime

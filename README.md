@@ -22,18 +22,13 @@ Edit settings in `settings.py` file
 Based on this code snippet —<br>
 https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 
-All animated emotes will be converted to webp<br>
-All static emotes will be converted to png
+All animated emotes will be converted to webm ("video" stickers)<br>
+All static emotes will be converted to png ("static" stickers)
 
 ## Requirements
 * [Python 3.11+](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
-* colorama
-* Pillow
-* wget
-* requests
-* progress
-
+* All modules that need to be installed can be located in `requirements.txt` file
 You can install python on https://python.org
-and run `install-requirements.bat` file.
+and run `install-requirements.bat` file to automatically install all modules.
 
 ### Made for [Pepeland Community](https://pepeland.net)
