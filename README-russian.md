@@ -33,3 +33,19 @@ https://gist.github.com/a268e881f4ecf6cd1f2af5d4031e993d
 > Модуль `win10toast` нужен только если вы собираетесь использовать настройку `skip_long_emotes` с значением `ct`
 ## Дампинг занимает много времени?
 Вы можете ощущать медленный дампинг эмоут-сетов если дампер находится на медленных дисках, самая долгая часть дампинга это конвертирование анимированных эмоутов в формат **webM**. Чтобы устранить данную проблему просто переместите дампер на более быстрый диск.
+# Фикс конвертировки значения возврата `win10toast` WNDPROC `on_destroy`
+Когда вы получаете уведомления вы можеет встретить ошибку:
+```
+WNDPROC return value cannot be converted to LRESULT
+TypeError: WPARAM is simple, so must be an int object (got NoneType)
+```
+Это проблема модуля `win10toast`.<br>
+Вы можете пофиксить её вручную поменяя метод `on_destroy` от `ToastNotifier` с возвратом `0` вместо `None` —
+```py
+def on_destroy(self, hwnd, msg, wparam, lparam):
+    nid = (self.hwnd, 0)
+    Shell_NotifyIcon(NIM_DELETE, nid)
+    PostQuitMessage(0)
+
+    return 0 # Тут было None
+```

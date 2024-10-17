@@ -36,10 +36,12 @@ output_quality = settings.output_quality
 crf_quality = settings.crf_quality
 skip_long_emotes = settings.skip_long_emotes
 ffmpeg_preset = settings.ffmpeg_preset
+moviepy_logger = settings.moviepy_logger
+dumping_done_notification = settings.dumping_done_notification
 
 toaster = None
 
-if skip_long_emotes == "ct":
+if skip_long_emotes == "ct" or dumping_done_notification:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
 
@@ -99,7 +101,7 @@ def convertAnimatedEmote(emote):
                 return "deleted"
 
         print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) and probably will not pass Telegram video sticker checks.")
-    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="libvpx-vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0", "-c:v", "libvpx-vp9", "-row-mt", "1", "-pix_fmt", "yuva420p", "-vf", "colorkey=white"], preset=ffmpeg_preset)
+    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="libvpx-vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0", "-c:v", "libvpx-vp9", "-row-mt", "1", "-pix_fmt", "yuva420p", "-vf", "colorkey=white", "-loop", "1"], preset=ffmpeg_preset, logger=moviepy_logger and "bar" or None)
     clip.close()
 
 def processAnimatedEmote(emote):
@@ -119,7 +121,7 @@ def processAnimatedEmote(emote):
         emoteTimeResult = time.time()-emoteExecutionTime
         downloadTookTime += emoteTimeResult
         
-        print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512)\nSaving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+        print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512)\nSaving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}KiB) ({i}/{len(allEmotes)})\n")
         
         return convertAnimatedEmote(emote)
 
@@ -226,9 +228,16 @@ for emote in allEmotes:
     downloadTookSpace += emoteSizeResult
     downloadTookTime += emoteTimeResult
             
-    print(Fore.GREEN+f"Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}kB) ({i}/{len(allEmotes)})\n")
+    print(Fore.GREEN+f"Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({round(emoteSizeResult/1000, 2)}KiB) ({i}/{len(allEmotes)})\n")
     if isAnimated:
         os.remove(f"{folder}/{emote['name']}.gif")
 
 print(Fore.MAGENTA+"===")
-print(Fore.GREEN+f"Emotes downloading took {round(downloadTookTime, 2)}s and {downloadTookSpace/1000000}MB")
+print(Fore.GREEN+f"Emotes downloading took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB")
+
+if dumping_done_notification:
+    toaster.show_toast(f"{emotesetname} by {emotesetauthor}",
+                    f"Emotes dumping took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB",
+                    duration=10,
+                    threaded=True
+                )

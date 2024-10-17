@@ -36,3 +36,19 @@ and run `install-requirements.bat` file to automatically install all modules.
 > Module `win10toast` is required only if you want to use setting `skip_long_emotes` with value `ct`
 ## Long dumping times?
 You can experience long emote-sets dumping times if dumper is on slow drives, the slowest part of dumping is converting animated emotes to **webM**. To fix that problem simply move your dumper install path to faster drive.
+# `win10toast` WNDPROC `on_destroy` return value convertation fix
+When getting notifications you can encounter error
+```
+WNDPROC return value cannot be converted to LRESULT
+TypeError: WPARAM is simple, so must be an int object (got NoneType)
+```
+This is a problem with `win10toast` module itself.<br>
+You can fix it manually by changing method `on_destroy` of `ToastNotifier` with returning `0` instead of `None` —
+```py
+def on_destroy(self, hwnd, msg, wparam, lparam):
+    nid = (self.hwnd, 0)
+    Shell_NotifyIcon(NIM_DELETE, nid)
+    PostQuitMessage(0)
+
+    return 0 # None was there
+```
