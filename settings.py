@@ -10,7 +10,7 @@ remove = True # remove all emotes from folder before starting
 
 rescale_to = 512 # for telegram stickers you need either width or height to be 512 so this value is recommended, or 100 for stickerpack icon
 
-ffmpeg_preset = "slow"
+ffmpeg_preset = "placebo"
 #^ presets: ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow, placebo
 #| this only changes file size, choose ultrafast if you don't care about size
 

@@ -99,7 +99,7 @@ def convertAnimatedEmote(emote):
                 return "deleted"
 
         print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" duration is more than 3 seconds ({clip.duration}s) and probably will not pass Telegram video sticker checks.")
-    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0","-vf", "colorkey=white"], preset=ffmpeg_preset)
+    clip.write_videofile(f"{folder}/{emote['name']}.webm", codec="libvpx-vp9", fps=30, audio=False, ffmpeg_params=["-crf",str(crf_quality),"-b:v","0", "-c:v", "libvpx-vp9", "-row-mt", "1", "-pix_fmt", "yuva420p", "-vf", "colorkey=white"], preset=ffmpeg_preset)
     clip.close()
 
 def processAnimatedEmote(emote):
@@ -136,7 +136,8 @@ def processAnimatedEmote(emote):
     for frame in ImageSequence.Iterator(img):
         framenum += 1
         thumbnail: Image.Image = frame.copy()
-        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST, reducing_gap=3.0).convert(mode="RGBA")
+        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST, reducing_gap=3.0).convert("RGBA")
+        thumbnail.info.pop("background", None)
         new_frames.append(thumbnail)
         bar.next()
     bar.finish()
