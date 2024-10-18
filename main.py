@@ -21,6 +21,7 @@ import wget
 import os
 
 import subprocess
+
 from ffmpeg_progress_yield import FfmpegProgress
 from progress.bar import ShadyBar
 
