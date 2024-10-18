@@ -3,5 +3,5 @@ Pillow
 wget
 requests
 progress
-moviepy
+ffmpeg-progress-yield
 win10toast

@@ -14,15 +14,22 @@ ffmpeg_preset = "placebo"
 #^ presets: ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow, placebo
 #| this only changes file size, choose ultrafast if you don't care about size
 
-skip_long_emotes = "anything else" # skip emotes if they're longer than 3 seconds, anything else as value is recommended.
+skip_long_emotes = "d" # skip emotes if they're longer than 3 seconds, d as value is recommended since Telegram may also allow video stickers longer than 3 seconds.
 #^ y for auto skip and deletion
 #| c for choose with input (Want to skip {emote}? [Y/N])
 #| ct for c with win10toast notifications
-#| anything else for force convertation
-
-moviepy_logger = True # moviepy webm video writing is going to log progress bar if True, not if False
+#| d for force convertation without warning
+#| anything else for force convertation with warning
 
 dumping_done_notification = True # create windows 10 notification (win10toast) when dumping process is done
 
 output_quality = 30 # / 100
 crf_quality = 40 # / 63 | lower values mean better quality: https://trac.ffmpeg.org/wiki/Encode/VP9#constantq
+
+ffmpeg_progress = False
+# enabling this setting may cause some issues and freeze program on some emotes, not really recommended (you can try it though.)
+
+pathToFFMPEG = "ffmpeg/bin/ffmpeg.exe"
+# if you already have ffmpeg installed on your system,
+# please provide path to it and delete it from dumper folder.
+# if you have it added to PATH just change this setting to "ffmpeg"
