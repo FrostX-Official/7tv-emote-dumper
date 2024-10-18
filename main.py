@@ -72,20 +72,21 @@ def getEmotesFromEmoteSetId(id):
     return emotes, emotesetname, emotesetauthor
 
 def convertAnimatedEmote(emotepath):
+    # ffmpeg can cause memory leak which is unrelated to this program,
+    # if you're having problems with dumping emotes and experiencing this memory leak
+    # try looking for better ffmpeg build without memory leak
     print(Fore.YELLOW+"Converting to WEBM...")
     command = [settings.pathToFFMPEG, "-i", f"{emotepath}.gif", "-crf", str(settings.crf_quality), "-framerate", "30", "-b:v", "0", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-row-mt", "1", "-loop", "1", f"{emotepath}.webm"]
     if ffmpeg_progress:
         ff = FfmpegProgress(command)
         bar = ShadyBar(Fore.YELLOW+"Converting...", max=100, suffix="%(percent).1f%%")
-        # i don't know why this can cause program freeze but yeah:
-        # comment 81-98 and uncomment 75-79 incase program freezes.
         for progress in ff.run_command_with_progress():
             bar.index = progress
             bar.update()
         bar.finish()
     else:
         bar = ShadyBar(Fore.YELLOW+"Converting...", max=100, suffix="%(percent).1f%%")
-        subprocess.run(command, capture_output=True, text=True)
+        print(subprocess.run(command, capture_output=True, text=True))
         bar.index = 100
         bar.update()
         bar.finish()
