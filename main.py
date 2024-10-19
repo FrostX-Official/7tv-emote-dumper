@@ -39,7 +39,6 @@ converting_abort_time = settings.converting_abort_time
 skip_long_emotes = settings.skip_long_emotes
 ffmpeg_preset = settings.ffmpeg_preset
 dumping_done_notification = settings.dumping_done_notification
-ffmpeg_progress = settings.ffmpeg_progress
 
 # toaster
 

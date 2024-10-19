@@ -31,9 +31,6 @@ converting_abort_time = 30 # seconds, recommended value is 20-40 seconds
 # so if convertation takes too long it will just be terminated and specific emote dumping will be skipped.
 # for example, for me 75th emote dumping "this" from pwgood emote-set just completely freezes program forever so it just aborts convertation.
 
-ffmpeg_progress = False
-# enabling this setting may cause some issues and freeze program on some emotes, not really recommended (you can try it though.)
-
 pathToFFMPEG = "ffmpeg/bin/ffmpeg.exe"
 # if you already have ffmpeg installed on your system,
 # please provide path to it and delete it from dumper folder.
