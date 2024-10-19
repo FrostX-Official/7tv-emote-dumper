@@ -41,11 +41,15 @@ ffmpeg_preset = settings.ffmpeg_preset
 dumping_done_notification = settings.dumping_done_notification
 ffmpeg_progress = settings.ffmpeg_progress
 
+# toaster
+
 toaster = None
 
 if skip_long_emotes == "ct" or dumping_done_notification:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
+
+# main functions
 
 def getEmotesFromEmoteSetId(id):
     emotes = []
@@ -139,7 +143,7 @@ def processAnimatedEmote(emote):
         
         print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512)\nSaving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}KiB) ({i}/{len(allEmotes)})\n")
         
-        return convertAnimatedEmote(f"{folder}\{emote['name']}")
+        return convertAnimatedEmote(emote["name"])
 
     framestotal = 0
     for frame in ImageSequence.Iterator(img):
@@ -181,7 +185,7 @@ def processAnimatedEmote(emote):
     if processDurationWarning(emote["name"], total_duration) == "deleted":
         return "deleted"
     
-    convertResult = convertAnimatedEmote(f"{folder}\{emote['name']}")
+    convertResult = convertAnimatedEmote(emote["name"])
 
     if convertResult != "deleted":
         convertResult = total_duration
