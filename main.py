@@ -92,8 +92,8 @@ def convertAnimatedEmote(emotename):
     if process.is_alive():
         process.terminate()
         process.join()
-        print(Fore.RED+f"WARN ⚠ | Converting took too long. Terminated convertation process. Aborting \"{emotename}\" dumping.")
         bar.finish()
+        print(Fore.RED+f"WARN ⚠ | Converting took too long. Terminated convertation process. Aborting \"{emotename}\" dumping.")
         return "deleted"
     
     return "buh"
