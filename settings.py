@@ -6,7 +6,8 @@ emoteset_id = "61c802080bf6300371940381"
 #| example by me: 670ff57306e6ff74beaa856a | tests downloading various emotes that can break dumper
 
 folder = "emotes" # folder to dump emotes and clear it if "remove" setting is true
-remove = True # remove all emotes from folder before starting
+clear_emotes = True # clear all emotes from folder before starting
+clear_logs = False # clear all logs from folder before starting
 
 rescale_to = 512 # for telegram stickers you need either width or height to be 512 so this value is recommended, or 100 for stickerpack icon
 
@@ -23,8 +24,8 @@ skip_long_emotes = "d" # skip emotes if they're longer than 3 seconds, d as valu
 
 dumping_done_notification = True # create windows 10 notification (win10toast) when dumping process is done
 
-output_quality = 30 # / 100
-crf_quality = 40 # / 63 | lower values mean better quality: https://trac.ffmpeg.org/wiki/Encode/VP9#constantq
+output_quality = 25 # / 100
+crf_quality = 63 # / 63 | lower values mean better quality: https://trac.ffmpeg.org/wiki/Encode/VP9#constantq
 
 converting_abort_time = 30 # seconds, recommended value is 20-40 seconds
 # sometimes ffmpeg can just be dumb and freeze while converting,

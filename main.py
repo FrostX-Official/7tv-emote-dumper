@@ -25,13 +25,17 @@ import os
 from ffmpeg_progress_yield import FfmpegProgress
 from progress.bar import ShadyBar
 
+import logging
+rootLogger = multiprocessing.get_logger()
+
 # settings
 
 import settings
 
 emoteset_id = settings.emoteset_id
 folder = settings.folder
-remove = settings.remove
+clear_emotes = settings.clear_emotes
+clear_logs = settings.clear_logs
 rescale_to = settings.rescale_to
 output_quality = settings.output_quality
 crf_quality = settings.crf_quality
@@ -78,12 +82,13 @@ def multiprocess_ffmpeg(emotepath, bar):
     bar.finish()
 
 def convertAnimatedEmote(emotename):
+    rootLogger.info("Converting to WEBM...")
     print(Fore.YELLOW+"Converting to WEBM...")
     bar = ShadyBar(Fore.YELLOW+"Converting...", max=100, suffix="%(percent).1f%%")
     
     # converting divided into 2 functions, one of them is in another process to prevent program freezing on specific emote
     # see settings.py "converting_abort_time" setting description for more information.
-    process = multiprocessing.Process(target=multiprocess_ffmpeg, name="FFMPEG", args=(f"{folder}\{emotename}", bar))
+    process = multiprocessing.Process(target=multiprocess_ffmpeg, name=f"FFMPEG|{emotename}", args=(f"{folder}\{emotename}", bar))
     process.start()
 
     process.join(converting_abort_time)
@@ -92,7 +97,8 @@ def convertAnimatedEmote(emotename):
         process.terminate()
         process.join()
         bar.finish()
-        print(Fore.RED+f"WARN ⚠ | Converting took too long. Terminated convertation process. Aborting \"{emotename}\" dumping.")
+        rootLogger.warning(f"Converting took too long. Terminated convertation process. Aborting \"{emotename}\" dumping.\n")
+        print(Fore.RED+f"WARN ⚠ | Converting took too long. Terminated convertation process. Aborting \"{emotename}\" dumping.\n")
         return "deleted"
     
     return "buh"
@@ -100,12 +106,15 @@ def convertAnimatedEmote(emotename):
 def processDurationWarning(emotename, duration):
     if duration > 3 and skip_long_emotes.lower() != "d":
         if skip_long_emotes.lower() == "y":
+            rootLogger.warning(f"\"{emotename}\" duration is more than 3 seconds ({duration}s) deleting and skipping...")
             print(Fore.RED+f"WARN ⚠ | \"{emotename}\" duration is more than 3 seconds ({duration}s) deleting and skipping...")
             return "deleted"
         
         elif skip_long_emotes.lower() == "c":
             inp = input(Fore.RED+f"WARN ⚠ | \"{emotename}\" duration is more than 3 seconds ({duration}s) want to skip and delete \"{emotename}\"? [Y/N] > ")
+            rootLogger.warning(f"\"{emotename}\" duration is more than 3 seconds ({duration}s) want to skip and delete \"{emotename}\"? [Y/N] > {inp.lower()}")
             if inp.lower() == "y" or inp.lower() == "yes":
+                rootLogger.warning(f"Skipped and deleted \"{emotename}\".")
                 print(Fore.RED+f"Skipped and deleted \"{emotename}\".")
                 return "deleted"
             
@@ -117,10 +126,13 @@ def processDurationWarning(emotename, duration):
                 )
             
             inp = input(Fore.RED+f"WARN ⚠ | \"{emotename}\" duration is more than 3 seconds ({duration}s) want to skip and delete \"{emotename}\"? [Y/N] > ")
+            rootLogger.warning(f"\"{emotename}\" duration is more than 3 seconds ({duration}s) want to skip and delete \"{emotename}\"? [Y/N] > {inp.lower()}")
             if inp.lower() == "y" or inp.lower() == "yes":
+                rootLogger.warning(f"Skipped and deleted \"{emotename}\".")
                 print(Fore.RED+f"Skipped and deleted \"{emotename}\".")
                 return "deleted"
 
+        rootLogger.warning(Fore.RED+f"\"{emotename}\" duration is more than 3 seconds ({duration}s) and may not pass Telegram video sticker checks.")
         print(Fore.RED+f"WARN ⚠ | \"{emotename}\" duration is more than 3 seconds ({duration}s) and may not pass Telegram video sticker checks.")
 
 def processAnimatedEmote(emote):
@@ -130,6 +142,7 @@ def processAnimatedEmote(emote):
     highest = max(width,height)
     aspect_ratio_thingy = rescale_to/highest
     
+    rootLogger.info(f"Resizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
     print(Fore.YELLOW+f"Resizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
 
     if aspect_ratio_thingy == 1:
@@ -140,6 +153,7 @@ def processAnimatedEmote(emote):
         emoteTimeResult = time.time()-emoteExecutionTime
         downloadTookTime += emoteTimeResult
         
+        rootLogger.info(f"Skipped resizing! (Width or Height is already 512)\nSaving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}KiB) ({i}/{len(allEmotes)})\n")
         print(Fore.GREEN+f"Skipped resizing! (Width or Height is already 512)\nSaving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({emoteSizeResult/1000}KiB) ({i}/{len(allEmotes)})\n")
         
         return convertAnimatedEmote(emote["name"])
@@ -194,8 +208,22 @@ def processAnimatedEmote(emote):
 # program start
     
 if __name__ == '__main__':
-    # remove all emotes from folder
-    if remove:
+    # logger initiation
+
+    logFormatter = logging.Formatter(f"%(asctime)s [%(processName)s] [%(levelname)-8.8s]  %(message)s")
+
+    logFilename = f"logs/{emoteset_id}-{int(time.time())}.log"
+    fileHandler = logging.FileHandler(logFilename)
+    fileHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(fileHandler)
+    rootLogger.setLevel(logging.DEBUG)
+
+    rootLogger.critical("7TV Emote Dumper Log")
+
+    #rootLogger.callHandlers(logging.LogRecord("test",logging.DEBUG,"main.py",223,"TEST",None,None))
+
+    # clear all emotes from folder
+    if clear_emotes:
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:
@@ -204,7 +232,21 @@ if __name__ == '__main__':
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                print(Fore.RED+"Failed to delete %s. Reason: %s" % (file_path, e))
+                rootLogger.error(f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
+                print(Fore.RED+f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
+
+    # clear all logs from logs folder
+    if clear_logs:
+        for filename in os.listdir("logs"):
+            file_path = os.path.join("logs", filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                rootLogger.error(f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
+                print(Fore.RED+f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
 
     # main
 
@@ -213,6 +255,7 @@ if __name__ == '__main__':
     downloadTookSpace = 0
     downloadTookTime = 0
 
+    rootLogger.info(f"=== ALL EMOTES | {emotesetname} by {emotesetauthor} ({len(allEmotes)})")
     print(Fore.MAGENTA+f"=== ALL EMOTES | {emotesetname} by {emotesetauthor} ({len(allEmotes)})")
     i = 0
     for emote in allEmotes:
@@ -221,9 +264,12 @@ if __name__ == '__main__':
         isAnimated = emote["data"]["animated"]
         newformat = isAnimated and "gif" or "png"
         isAnimatedText = isAnimated and Fore.MAGENTA+"Animated" or Fore.YELLOW+"Static"
-        print(Fore.MAGENTA+emote["name"], f"({emote['id']}),", isAnimatedText, f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
+        isAnimatedTextForLogger = isAnimated and "Animated" or "Static"
+        rootLogger.info(emote["name"] +" "+ f"({emote['id']}),"  +" "+ isAnimatedTextForLogger  +" "+ f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
+        print(Fore.MAGENTA+emote["name"] +" "+ f"({emote['id']}),"  +" "+ isAnimatedText  +" "+ f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
 
         try:
+            rootLogger.info(f"Downloading {newformat.upper()} ...")
             print(Fore.YELLOW+f"Downloading {newformat.upper()} ...")# [ https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat} to {folder}/{emote['name']}.{newformat} ]
             bar = ShadyBar(Fore.YELLOW+"Downloading...", max=10000, suffix="%(index)d/%(max)d bytes | %(percent).1f%%")
             def wget_download_progressbar(current, total, width=80):
@@ -234,14 +280,18 @@ if __name__ == '__main__':
             bar.finish()
         except Exception as e:
             if "WinError 10060" in str(e):
+                rootLogger.error(Fore.RED+f"Failed to download {emote['name']}: {e} | You might have not stable internet connection, or 7TV CDN is down, or you have 7TV blocked by your provider | SKIPPING...\n\n")
                 print(Fore.RED+f"Failed to download {emote['name']}: {e} | You might have not stable internet connection, or 7TV CDN is down, or you have 7TV blocked by your provider | SKIPPING...\n\n")
                 continue
             if "[Errno 22] Invalid argument:" in str(e):
+                rootLogger.error(Fore.RED+f"Failed to download {emote['name']}: {e} | This might be because emote contains invalid characters like \"?\" | SKIPPING...\n\n")
                 print(Fore.RED+f"Failed to download {emote['name']}: {e} | This might be because emote contains invalid characters like \"?\" | SKIPPING...\n\n")
                 continue
 
+            rootLogger.error(f"\nFailed to download {emote['name']}: {e}")
             print(Fore.RED+f"\nFailed to download {emote['name']}: {e}")
             inp = input(Fore.MAGENTA+f"Skip this emote downloading? [Y - yes/N - raise error and crash program] > ")
+            rootLogger.debug(f"Skip this emote downloading? [Y - yes/N - raise error and crash program] > {inp.lower()}")
             if inp.lower() == "y" or inp.lower() == "yes":
                 continue
             else:
@@ -262,6 +312,7 @@ if __name__ == '__main__':
                 width, height = img.size
                 highest = max(width,height)
                 aspect_ratio_thingy = rescale_to/highest
+                rootLogger.info(f"Resizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
                 print(Fore.YELLOW+f"Resizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
                 bar = ShadyBar(Fore.YELLOW+"Resizing...", max=1, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
                 scaled_up = (int(width*aspect_ratio_thingy), int(height*aspect_ratio_thingy))
@@ -271,6 +322,7 @@ if __name__ == '__main__':
                 img.close()
         except Exception as e:
             if str(e) != "illegal image mode":
+                rootLogger.error(Fore.RED+f"\nFailed to resize and save {emote['name']}: {e}")
                 print(Fore.RED+f"\nFailed to resize and save {emote['name']}: {e}")
                 raise e
             
@@ -281,9 +333,11 @@ if __name__ == '__main__':
 
         if isAnimated:
             if emoteSizeResult > 256000:
+                rootLogger.warning(Fore.RED+f"\"{emote['name']}\" size is more than 256 kilobytes and may not pass Telegram video sticker checks.")
                 print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" size is more than 256 kilobytes and may not pass Telegram video sticker checks.")
         else:
             if emoteSizeResult > 512000:
+                rootLogger.warning(Fore.RED+f"\"{emote['name']}\" size is more than 512 kilobytes and may not pass Telegram static sticker checks.")
                 print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" size is more than 512 kilobytes and may not pass Telegram static sticker checks.")
         emoteTimeResult = time.time()-emoteExecutionTime
         emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
@@ -293,14 +347,18 @@ if __name__ == '__main__':
 
         emoteDurationResult = isAnimated and f" ({isAnimatedDurationResult}s)" or ""
                 
+        rootLogger.info(f"Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({round(emoteSizeResult/1000, 2)}KiB){emoteDurationResult} ({i}/{len(allEmotes)})\n")
         print(Fore.GREEN+f"Saving \"{emote['name']}\" took {round(emoteTimeResult, 2)}s -> {emoteNewPath} ({round(emoteSizeResult/1000, 2)}KiB){emoteDurationResult} ({i}/{len(allEmotes)})\n")
         if isAnimated:
             os.remove(f"{folder}/{emote['name']}.gif")
 
+    rootLogger.info("===")
+    rootLogger.info(f"Emotes downloading took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB")
     print(Fore.MAGENTA+"===")
     print(Fore.GREEN+f"Emotes downloading took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB")
 
     if dumping_done_notification:
+        rootLogger.info(f"Emotes downloading took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB")
         toaster.show_toast(f"{emotesetname} by {emotesetauthor}",
                         f"Emotes dumping took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB",
                         duration=10,

@@ -1,3 +1,7 @@
-emotes/*
 __pycache__/
+
+emotes/*
+logs/*
+
 !/emotes/PagMan.png
+!/logs/justtoexist.log
