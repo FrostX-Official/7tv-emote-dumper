@@ -132,7 +132,7 @@ def processDurationWarning(emotename, duration):
                 print(Fore.RED+f"Skipped and deleted \"{emotename}\".")
                 return "deleted"
 
-        rootLogger.warning(Fore.RED+f"\"{emotename}\" duration is more than 3 seconds ({duration}s) and may not pass Telegram video sticker checks.")
+        rootLogger.warning(f"\"{emotename}\" duration is more than 3 seconds ({duration}s) and may not pass Telegram video sticker checks.")
         print(Fore.RED+f"WARN ⚠ | \"{emotename}\" duration is more than 3 seconds ({duration}s) and may not pass Telegram video sticker checks.")
 
 def processAnimatedEmote(emote):
@@ -333,11 +333,11 @@ if __name__ == '__main__':
 
         if isAnimated:
             if emoteSizeResult > 256000:
-                rootLogger.warning(Fore.RED+f"\"{emote['name']}\" size is more than 256 kilobytes and may not pass Telegram video sticker checks.")
+                rootLogger.warning(f"\"{emote['name']}\" size is more than 256 kilobytes and may not pass Telegram video sticker checks.")
                 print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" size is more than 256 kilobytes and may not pass Telegram video sticker checks.")
         else:
             if emoteSizeResult > 512000:
-                rootLogger.warning(Fore.RED+f"\"{emote['name']}\" size is more than 512 kilobytes and may not pass Telegram static sticker checks.")
+                rootLogger.warning(f"\"{emote['name']}\" size is more than 512 kilobytes and may not pass Telegram static sticker checks.")
                 print(Fore.RED+f"WARN ⚠ | \"{emote['name']}\" size is more than 512 kilobytes and may not pass Telegram static sticker checks.")
         emoteTimeResult = time.time()-emoteExecutionTime
         emoteNewPath = f"{os.getcwd()}\{folder}\{emote['name']}.{newformat}"
