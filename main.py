@@ -210,13 +210,13 @@ def processAnimatedEmote(emote):
 if __name__ == '__main__':
     # logger initiation
 
-    logFormatter = logging.Formatter(f"%(asctime)s [%(processName)s] [%(levelname)-8.8s]  %(message)s")
+    rootLogger.setLevel(logging.DEBUG)
 
-    logFilename = f"logs/{emoteset_id}-{int(time.time())}.log"
+    logFormatter = logging.Formatter(f"%(asctime)s [%(levelname)-8.8s] %(message)s")
+    logFilename = f"logs/{emoteset_id}-{time.time()}".replace(".","-")+".log"
     fileHandler = logging.FileHandler(logFilename)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
-    rootLogger.setLevel(logging.DEBUG)
 
     rootLogger.critical("7TV Emote Dumper Log")
 
@@ -266,7 +266,7 @@ if __name__ == '__main__':
         isAnimatedText = isAnimated and Fore.MAGENTA+"Animated" or Fore.YELLOW+"Static"
         isAnimatedTextForLogger = isAnimated and "Animated" or "Static"
         rootLogger.info(emote["name"] +" "+ f"({emote['id']}),"  +" "+ isAnimatedTextForLogger  +" "+ f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
-        print(Fore.MAGENTA+emote["name"] +" "+ f"({emote['id']}),"  +" "+ isAnimatedText  +" "+ f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
+        print(Fore.MAGENTA+emote["name"] +" "+ f"({emote['id']}),"  +" "+ isAnimatedText  +" "+ Fore.RESET + f"https://cdn.7tv.app/emote/{emote['id']}/4x.{newformat}")
 
         try:
             rootLogger.info(f"Downloading {newformat.upper()} ...")
