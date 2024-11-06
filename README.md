@@ -52,3 +52,4 @@ def on_destroy(self, hwnd, msg, wparam, lparam):
 
     return 0 # None was there
 ```
+Fixing this issue is unnecessary, but will remove error print in live console *(error will not show up in logs even without fix)*
