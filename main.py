@@ -8,6 +8,10 @@ All static emotes will be converted to png ("static" stickers)
 Edit settings in settings.py file.
 """
 
+# TODO:
+# - Move most of the code in different files
+# ^ Example: resizing in `resizing.py`` and convertation in `convertation.py``
+
 ### MODULES / INITIATION
 
 from colorama import Fore
