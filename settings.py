@@ -5,7 +5,8 @@ emoteset_id = "61c802080bf6300371940381"
 #| smaller example by AlexanderLer: 612a670021ca87d781a04e49 (~300 emotes)
 #| example by me: 670ff57306e6ff74beaa856a | tests downloading various emotes that can break dumper
 
-folder = "emotes" # folder to dump emotes and clear it if "remove" setting is true
+folder = "emotes" # folder to dump emotes and clear it if "clear_emotes" setting is true
+logs_folder = "logs" # folder to dump logs and clear it if "clear_logs" setting is true
 clear_emotes = True # clear all emotes from folder before starting
 clear_logs = False # clear all logs from folder before starting
 

@@ -8,6 +8,8 @@ All static emotes will be converted to png ("static" stickers)
 Edit settings in settings.py file.
 """
 
+### MODULES / INITIATION
+
 from colorama import Fore
 import colorama
 
@@ -28,12 +30,13 @@ from progress.bar import ShadyBar
 import logging
 rootLogger = multiprocessing.get_logger()
 
-# settings
+### SETTINGS
 
 import settings
 
 emoteset_id = settings.emoteset_id
 folder = settings.folder
+logs_folder = settings.logs_folder
 clear_emotes = settings.clear_emotes
 clear_logs = settings.clear_logs
 rescale_to = settings.rescale_to
@@ -44,7 +47,7 @@ skip_long_emotes = settings.skip_long_emotes
 ffmpeg_preset = settings.ffmpeg_preset
 dumping_done_notification = settings.dumping_done_notification
 
-# toaster
+### TOASTER
 
 toaster = None
 
@@ -52,24 +55,33 @@ if skip_long_emotes == "ct" or dumping_done_notification:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
 
-# main functions
-
+### MAIN FUNCTIONS
+    
 def getEmotesFromEmoteSetId(id):
-    emotes = []
+    """
+    Returns an emotes list, emoteset name and emoteset author from emoteset ID
+    """
+
     fetchBody = {"operationName":"GetEmoteSet","variables":{"id":id},"query":"query GetEmoteSet($id: ObjectID!) {\n  emoteSet(id: $id) {\n    id\n    name\n    owner {\n    display_name\n    }\n    emotes {\n      id\n      name\n      data {\n      animated\n      }\n}\n}\n}"}
 
     emotesetJson = requests.post("https://7tv.io/v3/gql",json=fetchBody).json()
     emotesetname = emotesetJson["data"]["emoteSet"]["name"]
     emotesetauthor = emotesetJson["data"]["emoteSet"]["owner"]["display_name"]
+
+    emotes = []
     for emote in emotesetJson["data"]["emoteSet"]["emotes"]:
         emotes.append(emote)
 
     return emotes, emotesetname, emotesetauthor
 
 def multiprocess_ffmpeg(emotepath, bar):
-    # ffmpeg can freeze what is unrelated to this program,
-    # if you're having problems with dumping emotes and experiencing freezes while dumping specific emote
-    # try looking for better ffmpeg build without this issue.
+    """
+    FFMPEG can freeze which is unrelated to this program,
+    therefore we use ffmpeg convertation in separate multiprocessing Process,
+    and if it freezes we just abort convertation after `settings.converting_abort_time`.
+
+    See `settings.converting_abort_time` description for more information.
+    """
 
     command = [settings.pathToFFMPEG, "-i", f"{emotepath}.gif", "-crf", str(settings.crf_quality), "-framerate", "30", "-b:v", "0", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-row-mt", "1", "-loop", "1", "-f", "webm", f"{emotepath}.webm"]
     # ff = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,universal_newlines=True)
@@ -82,12 +94,18 @@ def multiprocess_ffmpeg(emotepath, bar):
     bar.finish()
 
 def convertAnimatedEmote(emotename):
+    """
+    Convert an animated emote from gif to webm.
+    Animated emote must already exist in `settings.folder`\`emote_name`.gif path.
+
+    Converting is divided into 2 functions, one of them is in another process to prevent program freezing on specific emote
+    See `settings.converting_abort_time` description for more information.
+    """
+
     rootLogger.info("Converting to WEBM...")
     print(Fore.YELLOW+"Converting to WEBM...")
     bar = ShadyBar(Fore.YELLOW+"Converting...", max=100, suffix="%(percent).1f%%")
-    
-    # converting divided into 2 functions, one of them is in another process to prevent program freezing on specific emote
-    # see settings.py "converting_abort_time" setting description for more information.
+
     process = multiprocessing.Process(target=multiprocess_ffmpeg, name=f"FFMPEG|{emotename}", args=(f"{folder}\{emotename}", bar))
     process.start()
 
@@ -101,9 +119,13 @@ def convertAnimatedEmote(emotename):
         print(Fore.RED+f"WARN ⚠ | Converting took too long. Terminated convertation process. Aborting \"{emotename}\" dumping.\n")
         return "deleted"
     
-    return "buh"
+    return None
 
 def processDurationWarning(emotename, duration):
+    """
+    If `emotename` is longer than 3 seconds proceed to show a warning and skip emote depending on `skip_long_emotes` setting.
+    """
+
     if duration > 3 and skip_long_emotes.lower() != "d":
         if skip_long_emotes.lower() == "y":
             rootLogger.warning(f"\"{emotename}\" duration is more than 3 seconds ({duration}s) deleting and skipping...")
@@ -136,11 +158,27 @@ def processDurationWarning(emotename, duration):
         print(Fore.RED+f"WARN ⚠ | \"{emotename}\" duration is more than 3 seconds ({duration}s) and may not pass Telegram video sticker checks.")
 
 def processAnimatedEmote(emote):
+    """
+    Animated emotes processing code.
+    Duration Check -> Resizing -> Skip resizing if width or height is already 512 pixels -> Converting
+    """
+
     img: Image.Image = Image.open(f"{folder}/{emote['name']}.gif")
     img.info.pop("background", None)
     width, height = img.size
     highest = max(width,height)
     aspect_ratio_thingy = rescale_to/highest
+
+    # duration check
+
+    total_duration = 0
+    for frame in ImageSequence.Iterator(img):
+        total_duration += thumbnail.info["duration"]
+    total_duration /= 1000 # ms to s
+    if processDurationWarning(emote["name"], total_duration) == "deleted":
+        return "deleted"
+    
+    # resizing
     
     rootLogger.info(f"Resizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
     print(Fore.YELLOW+f"Resizing {width}x{height} -> {int(width*aspect_ratio_thingy)}x{int(height*aspect_ratio_thingy)} ...")
@@ -164,7 +202,6 @@ def processAnimatedEmote(emote):
 
     new_frames = []
     framenum = 0
-    total_duration = 0
 
     bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
     scaled_up = (int(width*aspect_ratio_thingy), int(height*aspect_ratio_thingy))
@@ -175,7 +212,6 @@ def processAnimatedEmote(emote):
         thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST, reducing_gap=3.0).convert("RGBA")
         thumbnail.info.pop("background", None)
         new_frames.append(thumbnail)
-        total_duration += thumbnail.info["duration"]
         bar.next()
     bar.finish()
 
@@ -193,10 +229,7 @@ def processAnimatedEmote(emote):
         )
     om.close()
 
-    total_duration /= 1000 # ms to s
-
-    if processDurationWarning(emote["name"], total_duration) == "deleted":
-        return "deleted"
+    # converting
     
     convertResult = convertAnimatedEmote(emote["name"])
 
@@ -205,10 +238,11 @@ def processAnimatedEmote(emote):
 
     return convertResult
 
-# program start
+
+### PROGRAM START
     
 if __name__ == '__main__':
-    # logger initiation
+    ## Logger initiation
 
     rootLogger.setLevel(logging.DEBUG)
 
@@ -220,9 +254,7 @@ if __name__ == '__main__':
 
     rootLogger.critical("7TV Emote Dumper Log")
 
-    #rootLogger.callHandlers(logging.LogRecord("test",logging.DEBUG,"main.py",223,"TEST",None,None))
-
-    # clear all emotes from folder
+    ## Clear all emotes from folder
     if clear_emotes:
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
@@ -235,10 +267,10 @@ if __name__ == '__main__':
                 rootLogger.error(f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
                 print(Fore.RED+f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
 
-    # clear all logs from logs folder
+    ## Clear all logs from logs folder
     if clear_logs:
-        for filename in os.listdir("logs"):
-            file_path = os.path.join("logs", filename)
+        for filename in os.listdir(logs_folder):
+            file_path = os.path.join(logs_folder, filename)
             try:
                 if os.path.isfile(file_path) or os.path.islink(file_path):
                     os.unlink(file_path)
@@ -248,7 +280,7 @@ if __name__ == '__main__':
                 rootLogger.error(f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
                 print(Fore.RED+f"Failed to delete \"{file_path}\". Reason: \"{e}\"")
 
-    # main
+    ## Main
 
     allEmotes, emotesetname, emotesetauthor = getEmotesFromEmoteSetId(emoteset_id)
 
@@ -352,6 +384,8 @@ if __name__ == '__main__':
         if isAnimated:
             os.remove(f"{folder}/{emote['name']}.gif")
 
+    ## End
+   
     rootLogger.info("===")
     rootLogger.info(f"Emotes downloading took {round(downloadTookTime, 2)}s and {round(downloadTookSpace/1000000, 2)}MB")
     print(Fore.MAGENTA+"===")
