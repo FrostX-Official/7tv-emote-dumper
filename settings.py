@@ -10,6 +10,16 @@ logs_folder = "logs" # folder to dump logs and clear it if "clear_logs" setting 
 clear_emotes = True # clear all emotes from folder before starting
 clear_logs = False # clear all logs from folder before starting
 
+proxy = "http://148.72.169.225:30119"
+proxy_enabled = False
+#^ proxy settings, for example if you're from Russia and have 7TV blocked then use this.
+#| for proxy string example check httpx documentation for proxies: https://www.python-httpx.org/advanced/proxies, simple proxy with password example: "http://username:password@localhost:8030"
+#| if you're using SOCKS protocol then you must install httpx[socks]: `pip install httpx[socks]`, example string for SOCKS proxy: "socks5://user:pass@host:port"
+autofetch_country = "DE" # get at https://geonode.com/free-proxy-list, DE (Germany) for russians recommended.
+autofetch_proxy = False
+#^ enable `autofetch_proxy` to automatically get best proxy from geonode proxy list: https://geonode.com/free-proxy-list
+#| dumper will only use elite anonymity level for security and prefer fastest http server
+
 rescale_to = 512 # for telegram stickers you need either width or height to be 512 so this value is recommended, or 100 for stickerpack icon
 
 ffmpeg_preset = "placebo"

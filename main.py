@@ -21,15 +21,9 @@ from PIL import Image, ImageSequence
 import requests
 import shutil
 import time
-import wget
 import os
 
-from ffmpeg_progress_yield import FfmpegProgress
 from progress.bar import ShadyBar
-
-import convertation
-import downloader
-import resizing
 
 import logging
 rootLogger = multiprocessing.get_logger()
@@ -153,6 +147,11 @@ def processAnimatedEmote(emote):
 ### PROGRAM START
     
 if __name__ == '__main__':
+    ## Main Process Imports
+    import convertation
+    import downloader
+    import resizing
+
     ## Logger initiation
 
     rootLogger.setLevel(logging.DEBUG)

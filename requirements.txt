@@ -4,4 +4,6 @@ wget
 requests
 progress
 ffmpeg-progress-yield
-win10toast
+httpx
+win10toast #not required unless you use toasts
+httpx[socks] #not required unless you use socks proxy

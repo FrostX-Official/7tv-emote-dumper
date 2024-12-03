@@ -10,6 +10,7 @@ colorama.init(autoreset=True)
 import multiprocessing
 
 from PIL import Image, ImageSequence
+import io
 # import time
 # import os
 
@@ -26,6 +27,30 @@ rescale_to = settings.rescale_to
 output_quality = settings.output_quality
 
 ### MAIN
+
+def multiprocess_resize(queue: multiprocessing.Queue, img, frames, width, height, aspect_ratio_thingy):
+    """
+    Resizing in another process since progressbar breaks otherwise (idk why tbhhhh)
+    """
+
+    bar = ShadyBar(Fore.YELLOW+"Resizing...", max=len(frames), suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
+    scaled_up = (int(width*aspect_ratio_thingy), int(height*aspect_ratio_thingy))
+
+    new_frames = []
+    framenum = 0
+
+    for frame in frames:
+        thumbnail: Image.Image = frame.copy()
+        framenum += 1
+        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST, reducing_gap=3.0).convert("RGBA")
+        thumbnail.info.pop("background", None)
+        new_frames.append(thumbnail)
+        bar.index += 1
+        bar.update()
+    bar.finish()
+
+    queue.put(new_frames)
+    return new_frames
 
 def resizeAnimatedEmote(emote: dict, img: Image.Image) -> bool:
     """Resizes animated emote and saves it as a GIF.
@@ -58,28 +83,18 @@ def resizeAnimatedEmote(emote: dict, img: Image.Image) -> bool:
         
         return True
     
-    framestotal = 0
+    frames = []
     for frame in ImageSequence.Iterator(img):
-        framestotal += 1
+        frames.append(frame)
 
-    new_frames = []
-    framenum = 0
-
-    bar = ShadyBar(Fore.YELLOW+"Resizing...", max=framestotal, suffix="%(index)d/%(max)d frames resized | %(percent).1f%%")
-    scaled_up = (int(width*aspect_ratio_thingy), int(height*aspect_ratio_thingy))
-
-    for frame in ImageSequence.Iterator(img):
-        framenum += 1
-        thumbnail: Image.Image = frame.copy()
-        thumbnail = thumbnail.resize(scaled_up, Image.Resampling.NEAREST, reducing_gap=3.0).convert("RGBA")
-        thumbnail.info.pop("background", None)
-        new_frames.append(thumbnail)
-        bar.next()
-    bar.finish()
+    queue = multiprocessing.Queue()
+    process = multiprocessing.Process(target=multiprocess_resize, name=f"RESIZING|{emote['name']}", args=(queue, img, frames, width, height, aspect_ratio_thingy))
+    process.start()
+    process.join()
+    new_frames = queue.get()
 
     om: Image.Image = new_frames[0]
     om.info = img.info
-    img.close()
     om.save(f"{folder}/{emote['name']}.gif", format="GIF",
             optimize=False,
             save_all=True,
@@ -89,6 +104,7 @@ def resizeAnimatedEmote(emote: dict, img: Image.Image) -> bool:
             quality=output_quality,
             disposal=2
         )
+    img.close()
     om.close()
 
     return False
